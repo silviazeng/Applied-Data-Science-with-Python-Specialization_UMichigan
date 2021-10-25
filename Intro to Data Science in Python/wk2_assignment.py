@@ -100,7 +100,8 @@ def corr_chickenpox():
 
     # YOUR CODE HERE
     df = pd.read_csv('assets/NISPUF17.csv')
-    df_r = df[['HAD_CPOX','P_NUMVRC']].dropna()     # 'Had_CPOX' = 1: Yes; 2:No; 3: Don't know; 4: Refused; 5:Missing
+    df_r = df[['HAD_CPOX','P_NUMVRC']].dropna()    
+    df_r = df[df['HAD_CPOX']<3]]   # 'HAD_CPOX'>=3：invalid data  (Had_CPOX' = 1: Yes; 2:No; 3: Don't know; 4: Refused; 5:Missing)
     corr, pval = stats.pearsonr(df_r['HAD_CPOX'], df_r['P_NUMVRC'])
     
     return corr
