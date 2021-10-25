@@ -55,4 +55,24 @@ def average_influenza_doses():
     # {"male":0.2,
     # "female":0.4}
 # Note: To aid in verification, the chickenpox_by_sex()['female'] value the autograder is looking for starts with the digits 0.0077.
+
+def chickenpox_by_sex():
+    # YOUR CODE HERE
+    import pandas as pd
+    df = pd.read_csv('assets/NISPUF17.csv')
+    df_r = df[['SEX','HAD_CPOX','P_NUMVRC']] 
+    # 'SEX' = 1: Male; 2: Female
+    # 'Had_CPOX' = 1: Yes; 2:No; 3: Don't know; 4: Refused; 5:Missing
+    
+    df_male = df_r[(df_r['SEX']==1) & (df_r['P_NUMVRC']>=1)]
+    df_female = df_r[(df_r['SEX']==2) & (df_r['P_NUMVRC']>=1)]
+    
+    male_ratio = len(df_male[df_male['HAD_CPOX']==1])/len(df_male[df_male['HAD_CPOX']==2])
+    female_ratio = len(df_female[df_female['HAD_CPOX']==1])/len(df_female[df_female['HAD_CPOX']==2])   
+    
+    dic = {'male': male_ratio, 'female': female_ratio}
+    
+    return dic
+    
+    raise NotImplementedError()
   
