@@ -1,5 +1,4 @@
 #---------------------------------------Assignment 3---------------------------------------
-
 # QUESTION 1
 
 # Load the energy data from the file assets/Energy Indicators.xls, which is a list of indicators of energy supply and renewable electricity production from the United Nations for the year 2013, and should be put into a DataFrame with the variable name of Energy.
@@ -56,5 +55,41 @@ def answer_one():
     DF = DF[['Rank', 'Documents', 'Citable documents', 'Citations', 'Self-citations', 'Citations per document', 'H index', 'Energy Supply', 'Energy Supply per Capita', '% Renewable', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015']]
     
     return DF
+    
+    raise NotImplementedError()
+    
+    
+# QUESTION 2
+# The previous question joined three datasets then reduced this to just the top 15 entries. When you joined the datasets, but before you reduced this to the top 15 items, how many entries did you lose? This function should return a single number.
+
+def answer_two():
+    # YOUR CODE HERE    
+    # Reproduce the merge in Q1 (excluding redundant steps):
+    import pandas as pd
+    # Load DF1: Energy
+    Energy = pd.read_excel("assets/Energy Indicators.xls", usecols="C:F", skiprows=17, #or use drop.(range(:20)) instead of skiprows\ 
+                        skipfooter=265-227, names = ['Country', 'Energy Supply', 'Energy Supply per Capita', '% Renewable'])
+    Energy['Country'] = Energy['Country'].replace("\d| \(.*\)","", regex=True) #drop digits and brackets in country names
+    Energy = Energy.replace({"Republic of Korea": "South Korea",\
+                    "United States of America": "United States",\
+                    "United Kingdom of Great Britain and Northern Ireland": "United Kingdom",\
+                    "China, Hong Kong Special Administrative Region": "Hong Kong"})
+    # Load DF2: GDP
+    GDP = pd.read_csv("assets/world_bank.csv", skiprows=4)
+    GDP['Country Name'] = GDP['Country Name'].replace({"Korea, Rep.": "South Korea",\
+                                                       "Iran, Islamic Rep.": "Iran",\
+                                                       "Hong Kong SAR, China": "Hong Kong"})
+    # Load DF3: ScimEn
+    ScimEn = pd.read_excel("assets/scimagojr-3.xlsx")
+    
+    # Merge 3 DFs
+    last_10_years = [str(year) for year in list(range(2006,2016,1))]
+    last_10_years.append('Country Name')
+    DF = pd.merge(Energy, GDP[last_10_years], how='inner', left_on='Country', right_on='Country Name')
+    DF = pd.merge(DF, ScimEn, how='right', on='Country').set_index('Country')
+    
+    DF_r = DF.iloc[:15]
+    diff = len(DF) - len(DF_r)
+    return diff
     
     raise NotImplementedError()
