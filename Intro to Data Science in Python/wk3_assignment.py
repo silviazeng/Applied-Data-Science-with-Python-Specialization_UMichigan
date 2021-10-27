@@ -50,9 +50,10 @@ def answer_one():
     last_10_years = [str(year) for year in list(range(2006,2016,1))]
     last_10_years.append('Country Name')
     DF = pd.merge(Energy, GDP[last_10_years], how='inner', left_on='Country', right_on='Country Name')
-    DF = pd.merge(DF, ScimEn.iloc[range(15)], how='right', on='Country')
-    DF= DF.drop('Country Name', axis=1).set_index('Country')
+    DF = pd.merge(DF, ScimEn.iloc[range(15)], how='inner', on='Country')
+    DF = DF.drop('Country Name', axis=1).set_index('Country')
     DF = DF[['Rank', 'Documents', 'Citable documents', 'Citations', 'Self-citations', 'Citations per document', 'H index', 'Energy Supply', 'Energy Supply per Capita', '% Renewable', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015']]
+    DF = DF.sort_values('Rank')
     
     return DF
     
@@ -86,7 +87,8 @@ def answer_two():
     last_10_years = [str(year) for year in list(range(2006,2016,1))]
     last_10_years.append('Country Name')
     DF = pd.merge(Energy, GDP[last_10_years], how='inner', left_on='Country', right_on='Country Name')
-    DF = pd.merge(DF, ScimEn, how='right', on='Country').set_index('Country')
+    DF = pd.merge(DF, ScimEn, how='inner', on='Country').set_index('Country')
+    DF = DF.sort_values('Rank')
     
     DF_r = DF.iloc[:15]
     diff = len(DF) - len(DF_r)
@@ -160,9 +162,147 @@ def answer_seven():
 #Create a column that estimates the population using Energy Supply and Energy Supply per capita. What is the third most populous country according to this estimate?
 #This function should return the name of the country
 
+def answer_eight():
+    # YOUR CODE HERE
+    DF = answer_one()
+    def ratio(series):
+        return series['Energy Supply'] / series['Energy Supply per Capita']
     
+    DF['estimated pop'] = DF.apply(ratio, axis=1)
+    return DF['estimated pop'].idxmax()
+  
+    raise NotImplementedError()
+            
     
+# QUESTION 9
+#Create a column that estimates the number of citable documents per person. What is the correlation between the number of citable documents per capita and the energy supply per capita? Use the .corr() method, (Pearson's correlation). This function should return a single number.
+#(Optional: Use the built-in function plot9() to visualize the relationship between Energy Supply per Capita vs. Citable docs per Capita)
+
+def answer_nine():
+    # YOUR CODE HERE
+    def ratio(series):
+        estimated_pop = series['Energy Supply'] / series['Energy Supply per Capita']
+        return series['Citable documents'] / estimated_pop
     
+    DF = answer_one()
+    DF['Citable docs per Capita'] = DF.apply(ratio, axis=1)
+    DF['Energy Supply per Capita'] = [float(x) for x in DF['Energy Supply per Capita']]  # corr() can only apply to same data type!!!
+    
+    corr = DF[['Energy Supply per Capita','Citable docs per Capita']].corr()  
+    return corr
+    
+    raise NotImplementedError()
+                
+    
+# QUESTION 10
+#Create a new column with a 1 if the country's % Renewable value is at or above the median for all countries in the top 15, and a 0 if the country's % Renewable value is below the median. This function should return a series named HighRenew whose index is the country name sorted in ascending order of rank.
+
+def answer_ten():
+    # YOUR CODE HERE
+    DF = answer_one()
+    benchmark = DF['% Renewable'].median()
+    
+    def above_median_or_not(series):
+        if series['% Renewable'] >= benchmark:
+            return 1
+        else:
+            return 0
+    
+    DF['HighRenew']=DF.apply(above_median_or_not, axis=1)
+    HighRenew = DF['HighRenew'].sort_values()
+    
+    return HighRenew
+    
+    raise NotImplementedError()
+             
+    
+# QUESTION 11   
+       
+#Use the following dictionary to group the Countries by Continent, then create a DataFrame that displays the sample size (the number of countries in each continent bin), and the sum, mean, and std deviation for the estimated population of each country.
+#This function should return a DataFrame with index named Continent ['Asia', 'Australia', 'Europe', 'North America', 'South America'] and columns ['size', 'sum', 'mean', 'std']
+
+def answer_eleven():
+    # YOUR CODE HERE
+    import pandas as pd
+    import numpy as np
+    ContinentDict  = {'China':'Asia', 
+                      'United States':'North America', 
+                      'Japan':'Asia', 
+                      'United Kingdom':'Europe', 
+                      'Russian Federation':'Europe', 
+                      'Canada':'North America', 
+                      'Germany':'Europe', 
+                      'India':'Asia',
+                      'France':'Europe', 
+                      'South Korea':'Asia', 
+                      'Italy':'Europe', 
+                      'Spain':'Europe', 
+                      'Iran':'Asia',
+                      'Australia':'Australia', 
+                      'Brazil':'South America'}
+    DF = answer_one().reset_index()   # put 'Country' from idx back into a column
+    DF['est_pop'] = (DF['Energy Supply'] / DF['Energy Supply per Capita']).astype(float)
+    
+    def gen_continent(Series):
+        return ContinentDict[Series['Country']]    
+    DF['Continent'] = DF.apply(gen_continent, axis=1)    
+    continent_sum = DF.groupby('Continent').agg({'est_pop':(np.size, np.sum, np.nanmean, np.nanstd)})   
+    return continent_sum
+    
+    raise NotImplementedError()
+             
+    
+# QUESTION 12   
+#Cut % Renewable into 5 bins. Group Top15 by the Continent, as well as these new % Renewable bins. How many countries are in each of these groups?
+#This function should return a Series with a MultiIndex of Continent, then the bins for % Renewable. Do not include groups with no countries.
+def answer_twelve():
+    # YOUR CODE HERE
+    import pandas as pd
+    import numpy as np
+    ContinentDict  = {'China':'Asia', 
+                      'United States':'North America', 
+                      'Japan':'Asia', 
+                      'United Kingdom':'Europe', 
+                      'Russian Federation':'Europe', 
+                      'Canada':'North America', 
+                      'Germany':'Europe', 
+                      'India':'Asia',
+                      'France':'Europe', 
+                      'South Korea':'Asia', 
+                      'Italy':'Europe', 
+                      'Spain':'Europe', 
+                      'Iran':'Asia',
+                      'Australia':'Australia', 
+                      'Brazil':'South America'}
+    DF = answer_one().reset_index()   # put 'Country' from idx back into a column
+    
+    def gen_continent(Series):
+        return ContinentDict[Series['Country']]
+    
+    DF['Continent'] = DF.apply(gen_continent, axis=1)
+    DF['% Renewable_bins'] = pd.cut(DF['% Renewable'], 5)
+    
+    DF = DF.set_index(['Continent','% Renewable_bins'])
+    summ = DF.groupby(level=(0,1)).size() # to create a multi-index Series
+    return summ
+   
+    raise NotImplementedError()
+                 
+    
+# QUESTION 13
+
+#Convert the Population Estimate series to a string with thousands separator (using commas). Use all significant digits (do not round the results). 
+#e.g. 12345678.90 -> 12,345,678.90
+#This function should return a series PopEst whose index is the country name and whose values are the population estimate string
+
+def answer_thirteen():
+    # YOUR CODE HERE
+    DF = answer_one()
+    DF['est_pop'] = (DF['Energy Supply'] / DF['Energy Supply per Capita']).astype(float)    
+    DF['PopEst']= DF['est_pop'].apply(lambda x: "{:,}".format(x))
+    return DF['PopEst']
+    
+    raise NotImplementedError()
 
 
     
