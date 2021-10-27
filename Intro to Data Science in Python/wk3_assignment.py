@@ -93,3 +93,76 @@ def answer_two():
     return diff
     
     raise NotImplementedError()
+    
+    
+# QUESTION 3
+#What are the top 15 countries for average GDP over the last 10 years? 
+#This function should return a Series named avgGDP with 15 countries and their average GDP sorted in descending order.
+
+def answer_three():
+    # YOUR CODE HERE
+    DF = answer_one()[[str(y) for y in list(range(2006,2016,1))]]
+    avgGDP = DF.apply(np.mean, axis=1).sort_values(ascending=False) #Default ascending=True
+    return avgGDP
+
+    raise NotImplementedError()
+    
+    
+# QUESTION 4
+
+#By how much had the GDP changed over the 10 year span for the country with the 6th largest average GDP? This function should return a single number.
+def answer_four():
+    # YOUR CODE HERE
+    country6 = answer_three().index[5]
+    DF = answer_one()[[str(y) for y in list(range(2006,2016,1))]]
+    change = DF.loc[country6]['2015'] - DF.loc[country6]['2006']
+    return change
+       
+    raise NotImplementedError()
+
+    
+# QUESTION 5
+#What is the mean energy supply per capita? This function should return a single number.
+def answer_five():
+    # YOUR CODE HERE
+    mean_espc = answer_one()['Energy Supply per Capita'].mean()
+    return mean_espc
+  
+    raise NotImplementedError()
+    
+    
+# QUESTION 6
+#What country has the maximum % Renewable and what is the percentage? This function should return a tuple with the name of the country and the percentage.
+
+def answer_six():
+    # YOUR CODE HERE
+    return (answer_one()['% Renewable'].idxmax(), answer_one()['% Renewable'].max())
+    raise NotImplementedError()
+    
+    
+# QUESTION 7
+#Create a new column that is the ratio of Self-Citations to Total Citations. What is the maximum value for this new column, and what country has the highest ratio?
+#This function should return a tuple with the name of the country and the ratio.
+
+def answer_seven():
+    # YOUR CODE HERE
+    DF = answer_one()[['Citations', 'Self-citations']]
+    
+    def ratio(series):
+        return series['Self-citations'] / series['Citations']
+    
+    DF['citation ratio'] = DF.apply(ratio, axis=1)
+    return (DF['citation ratio'].idxmax(), DF['citation ratio'].max())
+    raise NotImplementedError()
+        
+    
+# QUESTION 8
+#Create a column that estimates the population using Energy Supply and Energy Supply per capita. What is the third most populous country according to this estimate?
+#This function should return the name of the country
+
+    
+    
+    
+
+
+    
