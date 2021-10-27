@@ -185,9 +185,10 @@ def answer_nine():
     
     DF = answer_one()
     DF['Citable docs per Capita'] = DF.apply(ratio, axis=1)
-    DF['Energy Supply per Capita'] = [float(x) for x in DF['Energy Supply per Capita']]  # corr() can only apply to same data type!!!
+    DF['Energy Supply per Capita'] = [float(x) for x in DF['Energy Supply per Capita']] #corr() can only apply to same data type
     
-    corr = DF[['Energy Supply per Capita','Citable docs per Capita']].corr()  
+    corr = DF[['Energy Supply per Capita','Citable docs per Capita']].corr().iloc[0,1]
+  
     return corr
     
     raise NotImplementedError()
@@ -207,8 +208,9 @@ def answer_ten():
         else:
             return 0
     
+    DF = DF.sort_values('Rank')
     DF['HighRenew']=DF.apply(above_median_or_not, axis=1)
-    HighRenew = DF['HighRenew'].sort_values()
+    HighRenew = DF['HighRenew']
     
     return HighRenew
     
@@ -243,9 +245,13 @@ def answer_eleven():
     DF['est_pop'] = (DF['Energy Supply'] / DF['Energy Supply per Capita']).astype(float)
     
     def gen_continent(Series):
-        return ContinentDict[Series['Country']]    
-    DF['Continent'] = DF.apply(gen_continent, axis=1)    
-    continent_sum = DF.groupby('Continent').agg({'est_pop':(np.size, np.sum, np.nanmean, np.nanstd)})   
+        return ContinentDict[Series['Country']]
+    
+    DF['Continent'] = DF.apply(gen_continent, axis=1)
+    
+    continent_sum = DF.groupby('Continent').agg({'est_pop':(np.size, np.sum, np.nanmean, np.nanstd)})
+    continent_sum.columns = ['size', 'sum', 'mean', 'std']
+    
     return continent_sum
     
     raise NotImplementedError()
@@ -279,9 +285,9 @@ def answer_twelve():
         return ContinentDict[Series['Country']]
     
     DF['Continent'] = DF.apply(gen_continent, axis=1)
-    DF['% Renewable_bins'] = pd.cut(DF['% Renewable'], 5)
+    DF['% Renewable'] = pd.cut(DF['% Renewable'], 5)
     
-    DF = DF.set_index(['Continent','% Renewable_bins'])
+    DF = DF.set_index(['Continent','% Renewable'])
     summ = DF.groupby(level=(0,1)).size() # to create a multi-index Series
     return summ
    
