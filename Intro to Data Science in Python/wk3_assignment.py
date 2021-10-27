@@ -28,7 +28,7 @@ def answer_one():
     Energy = pd.read_excel("assets/Energy Indicators.xls", usecols="C:F", skiprows=17, #or use drop.(range(:20)) instead of skiprows\ 
                         skipfooter=265-227, names = ['Country', 'Energy Supply', 'Energy Supply per Capita', '% Renewable'])
     
-    Energy['Energy Supply'].apply(lambda x: x*1000000).replace('...', np.NaN)
+    Energy['Energy Supply'] = Energy['Energy Supply'].apply(lambda x: x*1000000).replace('...', np.NaN)
     Energy['Country'] = Energy['Country'].replace("\d| \(.*\)","", regex=True) #drop digits and brackets in country names
     Energy = Energy.replace({"Republic of Korea": "South Korea",\
                     "United States of America": "United States",\
@@ -51,10 +51,9 @@ def answer_one():
     last_10_years.append('Country Name')
     DF = pd.merge(Energy, GDP[last_10_years], how='inner', left_on='Country', right_on='Country Name')
     DF = pd.merge(DF, ScimEn.iloc[range(15)], how='inner', on='Country')
-    DF = DF.drop('Country Name', axis=1).set_index('Country')
+    DF= DF.drop('Country Name', axis=1).set_index('Country')
     DF = DF[['Rank', 'Documents', 'Citable documents', 'Citations', 'Self-citations', 'Citations per document', 'H index', 'Energy Supply', 'Energy Supply per Capita', '% Renewable', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015']]
     DF = DF.sort_values('Rank')
-    
     return DF
     
     raise NotImplementedError()
@@ -65,7 +64,7 @@ def answer_one():
 
 def answer_two():
     # YOUR CODE HERE    
-    # Reproduce the merge in Q1 (excluding redundant steps):
+    # Reproduce the merge in Q1 (but how='outer' & excluding redundant steps):
     import pandas as pd
     # Load DF1: Energy
     Energy = pd.read_excel("assets/Energy Indicators.xls", usecols="C:F", skiprows=17, #or use drop.(range(:20)) instead of skiprows\ 
@@ -86,8 +85,8 @@ def answer_two():
     # Merge 3 DFs
     last_10_years = [str(year) for year in list(range(2006,2016,1))]
     last_10_years.append('Country Name')
-    DF = pd.merge(Energy, GDP[last_10_years], how='inner', left_on='Country', right_on='Country Name')
-    DF = pd.merge(DF, ScimEn, how='inner', on='Country').set_index('Country')
+    DF = pd.merge(Energy, GDP[last_10_years], how='outer', left_on='Country', right_on='Country Name')
+    DF = pd.merge(DF, ScimEn, how='outer', on='Country').set_index('Country')
     DF = DF.sort_values('Rank')
     
     DF_r = DF.iloc[:15]
