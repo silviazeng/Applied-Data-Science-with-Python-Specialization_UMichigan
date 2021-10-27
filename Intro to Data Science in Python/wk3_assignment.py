@@ -63,8 +63,9 @@ def answer_one():
 # The previous question joined three datasets then reduced this to just the top 15 entries. When you joined the datasets, but before you reduced this to the top 15 items, how many entries did you lose? This function should return a single number.
 
 def answer_two():
-    # YOUR CODE HERE    
-    # Reproduce the merge in Q1 (but how='outer' & excluding redundant steps):
+    # YOUR CODE HERE
+    
+    # Reproduce the 3DFs in Q1 (but how = "outer" and excluding redundant steps)
     import pandas as pd
     # Load DF1: Energy
     Energy = pd.read_excel("assets/Energy Indicators.xls", usecols="C:F", skiprows=17, #or use drop.(range(:20)) instead of skiprows\ 
@@ -76,21 +77,23 @@ def answer_two():
                     "China, Hong Kong Special Administrative Region": "Hong Kong"})
     # Load DF2: GDP
     GDP = pd.read_csv("assets/world_bank.csv", skiprows=4)
-    GDP['Country Name'] = GDP['Country Name'].replace({"Korea, Rep.": "South Korea",\
-                                                       "Iran, Islamic Rep.": "Iran",\
-                                                       "Hong Kong SAR, China": "Hong Kong"})
+    # GDP['Country Name'] = GDP['Country Name'].replace(",\s.*","", regex=True) #drop ", ..." in country names
+    GDP.rename(columns={'Country Name': 'Country'}, inplace=True)
+    GDP['Country'] = GDP['Country'].replace({"Korea, Rep.": "South Korea",\
+                                             "Iran, Islamic Rep.": "Iran",\
+                                             "Hong Kong SAR, China": "Hong Kong"})
     # Load DF3: ScimEn
     ScimEn = pd.read_excel("assets/scimagojr-3.xlsx")
     
     # Merge 3 DFs
-    last_10_years = [str(year) for year in list(range(2006,2016,1))]
-    last_10_years.append('Country Name')
-    DF = pd.merge(Energy, GDP[last_10_years], how='outer', left_on='Country', right_on='Country Name')
-    DF = pd.merge(DF, ScimEn, how='outer', on='Country').set_index('Country')
-    DF = DF.sort_values('Rank')
+    OuterMerge1 = pd.merge(Energy, GDP, how='outer', on='Country')
+    OuterMerge = pd.merge(OuterMerge1, ScimEn, how='outer', on='Country').set_index('Country').sort_index()
     
-    DF_r = DF.iloc[:15]
-    diff = len(DF) - len(DF_r)
+    InnerMerge = pd.merge(Energy, GDP, how='inner', on='Country')
+    InnerMerge = pd.merge(InnerMerge, ScimEn, how='inner', on='Country').set_index('Country')
+    
+    diff = len(OuterMerge) - len(InnerMerge)
+    
     return diff
     
     raise NotImplementedError()
