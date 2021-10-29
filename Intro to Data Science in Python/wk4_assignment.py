@@ -254,7 +254,210 @@ def nfl_correlation():
 # QUESTION 5
 #In this question I would like you to explore the hypothesis that given that an area has two sports teams in different sports, those teams will perform the same within their respective sports. How I would like to see this explored is with a series of paired t-tests (so use ttest_rel) between all pairs of sports. Are there any sports where we can reject the null hypothesis? Again, average values where a sport has multiple teams in one region. Remember, you will only be including, for each sport, cities which have teams engaged in that sport, drop others as appropriate. This question is worth 20% of the grade for this assignment.
   
+import pandas as pd
+import numpy as np
+import scipy.stats as stats
+import re
 
+# YOUR CODE HERE 
+def nhl(): 
+    nhl_df=pd.read_csv("assets/nhl.csv")
+    cities=pd.read_html("assets/wikipedia_data.html")[1]
+    cities=cities.iloc[:-1,[0,3,5,6,7,8]]
+
+    # 1. process nhl_df      
+    DivisionNames = [x for x in nhl_df['GP'] if x.isnumeric()==False]
+    
+    nhl_df = nhl_df.drop(nhl_df[nhl_df['team'].isin(DivisionNames)].index)  #Drop Division rows
+    
+    nhl_df = nhl_df[nhl_df['year']==2018]  #keep data from year 2018 only
+    
+    nhl_df['team'] = nhl_df['team'].replace("\*","", regex=True) #drop "*" in team names
+    
+    nhl_df[['W','L']] = nhl_df[['W','L']].apply(pd.to_numeric)
+    
+    def winlossratio(series):
+        return series['W']/(series['W']+series['L'])
+    nhl_df['win_loss_ratio'] = nhl_df.apply(winlossratio, axis=1)
+
+    # 2. process cities
+    cities['NHL'] = cities['NHL'].replace("\[.*\]","", regex=True) #drop "[...]" in team names
+    
+    def split_team_name(str):
+        splits = re.findall(r'([A-Z][a-z]+([ ][A-Z][a-z]+)*)', str)
+        if splits == []:
+            return []
+        else:
+            return pd.DataFrame(splits)[0].tolist()
+    cities['NHL'] = cities['NHL'].apply(split_team_name)
+
+    # 3. create a 'WLRatio' col in cities
+        #shorten the team name in nhl_df:
+    team_list = []
+    for i in range(len(cities)):
+        team_list = team_list + cities['NHL'][i]
+        
+    for team in team_list:
+        nhl_df['team'][nhl_df['team'][nhl_df['team'].str.contains(team)==True].index] = team
+    nhl_df = nhl_df.set_index('team')
+    
+        #calculate the avg ratio
+    def avg_WLRatio(Series):
+        teams = Series['NHL']
+        return nhl_df.loc[teams]['win_loss_ratio'].mean()
+    cities['avg_Ratio'] = cities.apply(avg_WLRatio, axis=1)
+    
+    return pd.to_numeric(cities['avg_Ratio']) # pass in win/loss ratio from nhl_df in the same order as cities["Metropolitan area"]
+
+    raise NotImplementedError()
+    
+    
+def nba():
+    nba_df=pd.read_csv("assets/nba.csv")
+    cities=pd.read_html("assets/wikipedia_data.html")[1]
+    cities=cities.iloc[:-1,[0,3,5,6,7,8]]
+    
+    # 1. process nba_df      
+    nba_df = nba_df[nba_df['year']==2018]  #keep data from year 2018 only
+    
+    nba_df['team'] = nba_df['team'].replace("\*.*|\s\(.*\)","", regex=True) #clean team names
+   
+    nba_df['W/L%'] = nba_df['W/L%'].apply(pd.to_numeric)
+    
+    # 2. process cities
+    cities['NBA'] = cities['NBA'].replace("\[.*\]","", regex=True) #drop "[...]" in team names
+ 
+    def split_team_name(str):
+        splits = re.findall(r'[A-Z][a-z]+|\d{2}.*', str)
+        if splits == []:
+            return []
+        else:
+            return pd.DataFrame(splits)[0].tolist()
+    cities['NBA'] = cities['NBA'].apply(split_team_name)
+
+    # 3. create a 'WLRatio' col in cities
+        #shorten the team name in nba_df:
+    team_list = []
+    for i in range(len(cities)):
+        team_list = team_list + cities['NBA'][i]
+        
+    for team in team_list:
+        nba_df['team'][nba_df['team'][nba_df['team'].str.contains(team)==True].index] = team
+    nba_df = nba_df.set_index('team')
+ 
+        #calculate the avg ratio
+    def avg_WLRatio(Series):
+        teams = Series['NBA']
+        return nba_df.loc[teams]['W/L%'].mean()
+    cities['avg_Ratio'] = cities.apply(avg_WLRatio, axis=1)
+    
+    return pd.to_numeric(cities['avg_Ratio'])  # pass in win/loss ratio from nba_df in the same order as cities["Metropolitan area"]
+
+    raise NotImplementedError() 
+    
+    
+def mlb(): 
+    mlb_df=pd.read_csv("assets/mlb.csv")
+    cities=pd.read_html("assets/wikipedia_data.html")[1]
+    cities=cities.iloc[:-1,[0,3,5,6,7,8]]
+     
+    # 1. process mlb_df      
+    mlb_df = mlb_df[mlb_df['year']==2018]  #keep data from year 2018 only
+    mlb_df['W-L%'] = mlb_df['W-L%'].apply(pd.to_numeric)
+
+    # 2. process cities
+    cities['MLB'] = cities['MLB'].replace("\[.*\]","", regex=True) #drop "[...]" in team names
+
+    def split_team_name(str):
+        splits = re.findall(r'([A-Z][a-z]+([ ][A-Z][a-z]+)*)', str)
+        if splits == []:
+            return []
+        else:
+            return pd.DataFrame(splits)[0].tolist()
+    cities['MLB'] = cities['MLB'].apply(split_team_name)
+
+
+    # 4. create a 'WLRatio' col in cities
+        #shorten the team name in nba_df:
+    team_list = []
+    for i in range(len(cities)):
+        team_list = team_list + cities['MLB'][i]
+        
+    for team in team_list:
+        mlb_df['team'][mlb_df['team'][mlb_df['team'].str.contains(team)==True].index] = team
+    mlb_df = mlb_df.set_index('team')
+
+        #calculate the avg ratio
+    def avg_WLRatio(Series):
+        teams = Series['MLB']
+        return mlb_df.loc[teams]['W-L%'].mean()
+    cities['avg_Ratio'] = cities.apply(avg_WLRatio, axis=1)
+    
+    return pd.to_numeric(cities['avg_Ratio'])  # pass in win/loss ratio from mlb_df in the same order as cities["Metropolitan area"]
+
+def nfl(): 
+    nfl_df=pd.read_csv("assets/nfl.csv")
+    cities=pd.read_html("assets/wikipedia_data.html")[1]
+    cities=cities.iloc[:-1,[0,3,5,6,7,8]]
+    # YOUR CODE HERE
+    
+    # 1. process nfl_df      
+    DivisionNames = [x for x in nfl_df['L'] if x.isnumeric()==False]
+    
+    nfl_df = nfl_df.drop(nfl_df[nfl_df['team'].isin(DivisionNames)].index)  #Drop Division rows
+    
+    nfl_df = nfl_df[nfl_df['year']==2018]  #keep data from year 2018 only
+    
+    nfl_df['team'] = nfl_df['team'].replace("\*","", regex=True) #drop "*" in team names
+    
+    nfl_df[['W-L%']] = nfl_df[['W-L%']].apply(pd.to_numeric)
+
+    # 2. process cities
+    cities['NFL'] = cities['NFL'].replace("\[.*\]","", regex=True) #drop "[...]" in team names
+  
+    def split_team_name(str):
+        splits = re.findall(r'[A-Z][a-z]+|\d{2}[^A-Z]*', str)
+        if splits == []:
+            return []
+        else:
+            return pd.DataFrame(splits)[0].tolist()
+    cities['NFL'] = cities['NFL'].apply(split_team_name)
+
+    # 3. create a 'WLRatio' col in cities
+        #shorten the team name in nfl_df:
+    team_list = []
+    for i in range(len(cities)):
+        team_list = team_list + cities['NFL'][i]
+        
+    for team in team_list:
+        nfl_df['team'][nfl_df['team'][nfl_df['team'].str.contains(team)==True].index] = team
+    nfl_df = nfl_df.set_index('team')
+     
+        #calculate the avg ratio
+    def avg_WLRatio(Series):
+        teams = Series['NFL']
+        return nfl_df.loc[teams]['W-L%'].mean()
+    cities['avg_Ratio'] = cities.apply(avg_WLRatio, axis=1)
+    
+    return pd.to_numeric(cities['avg_Ratio']) # pass in win/loss ratio from nfl_df in the same order as cities["Metropolitan area"] 
+
+
+def sports_team_performance():    
+    # Note: p_values is a full dataframe, so df.loc["NFL","NBA"] should be the same as df.loc["NBA","NFL"] and
+    # df.loc["NFL","NFL"] should return np.nan
+    sports = ['NFL', 'NBA', 'NHL', 'MLB']
+    p_values = pd.DataFrame({k:np.nan for k in sports}, index=sports)
+    comb_df = pd.DataFrame(zip(nhl(),nba(),mlb(),nfl()), columns=['NHL', 'NBA', 'MLB','NFL'])
+    for i in sports:
+        for j in sports:
+            if i != j:
+                df = comb_df[[i,j]].dropna()
+                p_values.loc[i, j] = stats.ttest_rel(df[i], df[j])[1]   
+    assert abs(p_values.loc["NBA", "NHL"] - 0.02) <= 1e-2, "The NBA-NHL p-value should be around 0.02"
+    assert abs(p_values.loc["MLB", "NFL"] - 0.80) <= 1e-2, "The MLB-NFL p-value should be around 0.80"
+    return p_values
+
+    raise NotImplementedError()
 
 
 
